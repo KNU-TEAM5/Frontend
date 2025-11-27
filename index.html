@@ -80,7 +80,13 @@
             color: white;
         }
 
-        .edit-button {
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .action-button {
             padding: 12px 30px;
             border: 2px solid #667eea;
             background: white;
@@ -90,14 +96,24 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-left: auto;
         }
 
-        .edit-button:hover {
+        .action-button:hover {
             background: #667eea;
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .action-button.primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
         }
 
         .content {
@@ -312,10 +328,18 @@
             }
 
             .tab-button,
-            .edit-button {
+            .action-buttons {
                 width: 100%;
                 margin-left: 0;
                 margin-top: 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-button {
+                width: 100%;
             }
 
             .content {
@@ -332,6 +356,7 @@
         }
     </style>
 </head>
+<input type="file" id="fileInput" multiple style="display:none" />
 
 <body>
     <div class="container">
@@ -343,7 +368,10 @@
         <div class="tabs">
             <button class="tab-button active" onclick="switchView('DataAnalysis')">데이터 분석 결과</button>
             <button class="tab-button" onclick="switchView('AIInsight')">🤖 AI 해설</button>
-            <button class="edit-button" onclick="handleDataEdit()">🛠 데이터 수정</button>
+            <div class="action-buttons">
+                <button class="action-button" onclick="handleDataAdd()">📁 데이터 추가</button>
+                <button class="action-button primary" onclick="handleAnalyze()">▶️ 분석 시작</button>
+            </div>
         </div>
 
         <div class="content">
@@ -386,7 +414,8 @@
                         <div class="chart-caption">
                             <strong>📊 이 그래프는 무엇을 보여주나요?</strong><br>
                             AI의 판단 결과를 4가지로 나눠 보여줍니다. 초록색 막대는 정확한 판단, 빨간색 막대는 잘못된 판단입니다.
-                            빨간색 막대가 작을수록 AI가 실수를 적게 했다는 뜻이에요.
+                            빨간색 막대가 작을수록 AI가 실수를 적게 했다는 뜻이에요.<br>
+                            <em>※ 'A→B'는 실제로는 A였으나 AI가 B라고 판단했다는 것을 뜻합니다.</em>
                         </div>
                     </div>
                 </div>
@@ -438,12 +467,15 @@
             <div id="AIInsight-view" class="ai-insight-container">
                 <div class="section">
                     <h2 class="section-title">🤖 AI 분석 결론 및 공정 개선 제안</h2>
-                    
+
                     <div class="insight-box">
                         <h3>🖥️ 공정 상태 요약</h3>
                         <div class="insight-content">
                             <p>
-                                전해탈지 공정은 온도, 습도, 압력이 일정 범위 안에 있을 때 불량이 거의 발생하지 않는 안정적인 상태로 보입니다. 특히 온도는 약 44~55℃, 습도는 25~36%, 압력은 65~83 수준에서 운전될 때 양품 비율이 높게 유지됩니다. 이 구간에 해당하는 데이터가 600건 이상 모였다는 점을 보면, 현재 공정은 이 범위를 기준으로 관리해도 무리가 없을 만큼 충분한 운영 경험이 쌓인 상태라고 볼 수 있습니다.
+                                전해탈지 공정은 온도, 습도, 압력이 일정 범위 안에 있을 때 불량이 거의 발생하지 않는 안정적인 상태로 보입니다. 특히 온도는 약 44~55℃, 습도는
+                                25~36%, 압력은 65~83 수준에서 운전될 때 양품 비율이 높게 유지됩니다. 이 구간에 해당하는 데이터가 600건 이상 모였다는 점을 보면, 현재 공정은
+                                이
+                                범위를 기준으로 관리해도 무리가 없을 만큼 충분한 운영 경험이 쌓인 상태라고 볼 수 있습니다.
                             </p>
                         </div>
                     </div>
@@ -456,7 +488,8 @@
                                     온도는 44~55℃ 사이를 기본 목표 구간으로 설정하고, 이 범위를 벗어나면 먼저 온도 제어 계통을 확인해 주세요.
                                 </li>
                                 <li>
-                                    습도는 25~36% 구간을 유지하는 것을 권장하며, 특히 겨울철·우기처럼 외부 환경이 달라지는 시기에 가습/제습 장치 세팅을 사전에 조정하는 것이 좋습니다.
+                                    습도는 25~36% 구간을 유지하는 것을 권장하며, 특히 겨울철·우기처럼 외부 환경이 달라지는 시기에 가습/제습 장치 세팅을 사전에 조정하는 것이
+                                    좋습니다.
                                 </li>
                                 <li>
                                     압력은 65~83 수준에서 안정적으로 유지되도록 하고, 설비 점검이나 라인 변경 시 압력 변화가 큰지 꼭 확인해 주세요.
@@ -465,7 +498,8 @@
                                     설비 자동제어가 있다면, 이 안전 구간을 기준으로 상·하한 알람 값을 설정해 두면 현장에서 즉시 이상 여부를 파악하기 쉽습니다.
                                 </li>
                                 <li>
-                                    신규 작업 조건을 적용할 때는, 처음에는 이 안전 구간 안에서만 시범 운영하고, 문제가 없을 때 점차 범위를 조정하는 방식으로 변화폭을 관리하는 것이 안전합니다.
+                                    신규 작업 조건을 적용할 때는, 처음에는 이 안전 구간 안에서만 시범 운영하고, 문제가 없을 때 점차 범위를 조정하는 방식으로 변화폭을 관리하는
+                                    것이 안전합니다.
                                 </li>
                             </ul>
                         </div>
@@ -479,13 +513,16 @@
                                     온도·습도·압력 중 어느 하나만 안전 구간을 벗어나도 불량이 늘어나는 패턴이 있는지 주기적으로 확인해 주세요.
                                 </li>
                                 <li>
-                                    하루·주간 단위로 시간대별 센서 추세 그래프를 확인해, 특정 시간(예: 교대 직후, 설비 기동 직후)에만 조건이 흔들리지 않는지 점검하는 것이 좋습니다.
+                                    하루·주간 단위로 시간대별 센서 추세 그래프를 확인해, 특정 시간(예: 교대 직후, 설비 기동 직후)에만 조건이 흔들리지 않는지 점검하는 것이
+                                    좋습니다.
                                 </li>
                                 <li>
-                                    안전 구간 밖에서 발생한 불량 사례를 따로 모아, 어떤 조합(예: 높은 온도 + 낮은 습도)에서 문제가 두드러지는지 간단히 비교해 보면, 다음 개선 과제를 뽑아내는 데 도움이 됩니다.
+                                    안전 구간 밖에서 발생한 불량 사례를 따로 모아, 어떤 조합(예: 높은 온도 + 낮은 습도)에서 문제가 두드러지는지 간단히 비교해 보면, 다음 개선
+                                    과제를 뽑아내는 데 도움이 됩니다.
                                 </li>
                                 <li>
-                                    계절 교체 시기나 설비 정기 점검 이후에는, 안전 구간과 실제 운전 값이 얼마나 차이가 나는지를 체크하여, 세팅 값이 바뀌지 않았는지 확인해 주세요.
+                                    계절 교체 시기나 설비 정기 점검 이후에는, 안전 구간과 실제 운전 값이 얼마나 차이가 나는지를 체크하여, 세팅 값이 바뀌지 않았는지 확인해
+                                    주세요.
                                 </li>
                             </ul>
                         </div>
@@ -494,124 +531,72 @@
             </div>
         </div>
 
-    <div class="footer">
-        삼성, 종합설계프로젝트2
-    </div>
+        <div class="footer">
+            삼성, 종합설계프로젝트2
+        </div>
     </div>
 
     <script>
+        const API_BASE_URL = "https://port-0-capstone2-samsung-mig4d3f30c7d6141.sel3.cloudtype.app/api/v1";
         let charts = {};
 
         window.addEventListener("load", () => {
-            loadDummyData();
+            loadDataAndInit();
+            const fileInput = document.getElementById("fileInput");
+            if (fileInput) {
+                fileInput.addEventListener("change", onFileSelected);
+            }
         });
 
-        function loadDummyData() {
-            // --- 더미데이터 (백엔드 연결 전 임시 데이터) ---
-            const fiData = {
-                "feature_importance": [
-                    { "feature": "temp", "importance": 0.4260079811863177 },
-                    { "feature": "press", "importance": 0.372518858452722 },
-                    { "feature": "humid", "importance": 0.2014731603609603 }
-                ]
-            };
+        /* ------------------------------
+            1) 실제 백엔드 데이터 로드
+        ------------------------------ */
+        async function loadDataAndInit() {
+            try {
+                const [fiRes, cmRes, crRes, safeRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/feature-importance`),
+                    fetch(`${API_BASE_URL}/confusion-matrix`),
+                    fetch(`${API_BASE_URL}/classification-report-rf`),
+                    fetch(`${API_BASE_URL}/safe-region`)
+                ]);
 
-            const cmData = {
-                "confusion_matrix": {
-                    "normal_to_normal": 1692,
-                    "normal_to_defect": 0,
-                    "defect_to_normal": 10,
-                    "defect_to_defect": 402
+                if (!fiRes.ok || !cmRes.ok || !crRes.ok || !safeRes.ok) {
+                    throw new Error("API 응답 오류");
                 }
-            };
 
-            const crData = {
-                "0": {
-                    "precision": 0.9941245593419507,
-                    "recall": 1.0,
-                    "f1-score": 0.9970536240424278,
-                    "support": 1692
-                },
-                "1": {
-                    "precision": 1.0,
-                    "recall": 0.9757281553398058,
-                    "f1-score": 0.9877149877149877,
-                    "support": 412
-                },
-                "accuracy": 0.9952471482889734,
-                "macro avg": {
-                    "precision": 0.9970622796709754,
-                    "recall": 0.9878640776699029,
-                    "f1-score": 0.9923843058787077,
-                    "support": 2104
-                },
-                "weighted avg": {
-                    "precision": 0.9952750733871579,
-                    "recall": 0.9952471482889734,
-                    "f1-score": 0.9952249557121496,
-                    "support": 2104
-                }
-            };
+                const fiData = await fiRes.json();
+                const cmData = await cmRes.json();
+                const crData = await crRes.json();
+                const safeData = await safeRes.json();
 
-            const safeData = {
-                "prob_threshold": 0.05,
-                "safe_range": {
-                    "temp": { "min": 43.9276, "max": 54.7877 },
-                    "humid": { "min": 25.3105, "max": 36.4797 },
-                    "press": { "min": 65.1008, "max": 82.7077 }
-                },
-                "n_safe_points": 647
-            };
+                const modelData = transformData(fiData, cmData, crData, safeData);
 
-            // 기존 백엔드 연동 코드 대신 더미데이터 전달
-            const modelData = transformData(fiData, cmData, crData, safeData);
+                updateSummaryCards(modelData.metrics);
+                initCharts(modelData);
+                updateTable(modelData.metrics);
 
-            updateSummaryCards(modelData.metrics);
-            initCharts(modelData);
-            updateTable(modelData.metrics);
+            } catch (error) {
+                console.error(error);
+                alert("API 요청 실패: 백엔드 서버 상태를 확인하세요.");
+            }
         }
 
-        // async function loadDataAndInit() {
-        //     try {
-        //         const [fiRes, cmRes, crRes, safeRes] = await Promise.all([
-        //             fetch(`${API_BASE_URL}/feature-importance`),
-        //             fetch(`${API_BASE_URL}/confusion-matrix`),
-        //             fetch(`${API_BASE_URL}/classification-report-rf`),
-        //             fetch(`${API_BASE_URL}/safe-region`)
-        //         ]);
-
-        //         const [fiData, cmData, crData, safeData] = await Promise.all([
-        //             fiRes.json(),
-        //             cmRes.json(),
-        //             crRes.json(),
-        //             safeRes.json()
-        //         ]);
-
-        //         const modelData = transformData(fiData, cmData, crData, safeData);
-
-        //         updateSummaryCards(modelData.metrics);
-        //         initCharts(modelData);
-        //         updateTable(modelData.metrics);
-
-        //     } catch (err) {
-        //         console.error(err);
-        //         alert("백엔드 데이터 로드 실패");
-        //     }
-        // }
-
+        /* ------------------------------
+            2) 데이터 구조 변환
+        ------------------------------ */
         function transformData(fiData, cmData, crData, safeData) {
-            const featureMapping = { temp: "온도(temp)", press: "압력(press)", humid: "습도(humid)" };
+            const mapping = { temp: "온도(temp)", press: "압력(press)", humid: "습도(humid)" };
             const featureImportance = {};
 
-            (fiData.feature_importance || []).forEach((item) => {
-                const label = featureMapping[item.feature] || item.feature;
+            (fiData.feature_importance || []).forEach(item => {
+                const label = mapping[item.feature] || item.feature;
                 featureImportance[label] = item.importance;
             });
 
             const cm = cmData.confusion_matrix || {};
             const confusionMatrix = [
                 [cm.normal_to_normal ?? 0, cm.normal_to_defect ?? 0],
-                [cm.defect_to_normal ?? 0, cm.defect_to_defect ?? 0],
+                [cm.defect_to_normal ?? 0, cm.defect_to_defect ?? 0]
             ];
 
             const metrics = {
@@ -620,36 +605,23 @@
                     precision: crData["0"]?.precision ?? 0,
                     recall: crData["0"]?.recall ?? 0,
                     f1: crData["0"]?.["f1-score"] ?? 0,
-                    support: crData["0"]?.support ?? 0,
+                    support: crData["0"]?.support ?? 0
                 },
                 class1: {
                     precision: crData["1"]?.precision ?? 0,
                     recall: crData["1"]?.recall ?? 0,
                     f1: crData["1"]?.["f1-score"] ?? 0,
-                    support: crData["1"]?.support ?? 0,
+                    support: crData["1"]?.support ?? 0
                 },
-                macroAvg: {
-                    precision: crData["macro avg"]?.precision ?? 0,
-                    recall: crData["macro avg"]?.recall ?? 0,
-                    f1: crData["macro avg"]?.["f1-score"] ?? 0,
-                    support: crData["macro avg"]?.support ?? 0,
-                },
-                weightedAvg: {
-                    precision: crData["weighted avg"]?.precision ?? 0,
-                    recall: crData["weighted avg"]?.recall ?? 0,
-                    f1: crData["weighted avg"]?.["f1-score"] ?? 0,
-                    support: crData["weighted avg"]?.support ?? 0,
-                },
-                safeRegion: safeData,
+                safeRegion: safeData
             };
 
-            return {
-                confusionMatrix,
-                featureImportance,
-                metrics,
-            };
+            return { confusionMatrix, featureImportance, metrics };
         }
 
+        /* ------------------------------
+            3) UI 업데이트
+        ------------------------------ */
         function updateSummaryCards(metrics) {
             document.getElementById("accuracy-value").innerText = metrics.accuracy.toFixed(4);
             document.getElementById("precision-value").innerText = metrics.class1.precision.toFixed(4);
@@ -659,13 +631,11 @@
 
         function initCharts(modelData) {
             const cmCtx = document.getElementById("confusionMatrix").getContext("2d");
+
             charts.confusionMatrix = new Chart(cmCtx, {
                 type: "bar",
                 data: {
-                    labels: [
-                        "정상→정상", "정상→불량",
-                        "불량→정상", "불량→불량"
-                    ],
+                    labels: ["정상→정상", "정상→불량", "불량→정상", "불량→불량"],
                     datasets: [
                         {
                             data: [
@@ -678,28 +648,28 @@
                                 "rgba(75, 192, 192, 0.8)",
                                 "rgba(255, 99, 132, 0.8)",
                                 "rgba(255, 99, 132, 0.8)",
-                                "rgba(75, 192, 192, 0.8)",
-                            ],
-                        },
-                    ],
+                                "rgba(75, 192, 192, 0.8)"
+                            ]
+                        }
+                    ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
 
             const fiCtx = document.getElementById("featureImportance").getContext("2d");
-            const features = Object.keys(modelData.featureImportance);
-            const importance = Object.values(modelData.featureImportance);
-
             charts.featureImportance = new Chart(fiCtx, {
                 type: "bar",
                 data: {
-                    labels: features,
+                    labels: Object.keys(modelData.featureImportance),
                     datasets: [
                         {
-                            data: importance,
-                            backgroundColor: "rgba(102, 126, 234, 0.8)",
-                        },
-                    ],
+                            data: Object.values(modelData.featureImportance),
+                            backgroundColor: "rgba(102, 126, 234, 0.8)"
+                        }
+                    ]
                 },
                 options: {
                     indexAxis: "y",
@@ -710,8 +680,7 @@
         }
 
         function updateTable(metrics) {
-            const tbody = document.getElementById("reportBody");
-            tbody.innerHTML = `
+            document.getElementById("reportBody").innerHTML = `
             <tr>
                 <td>정상</td>
                 <td>${metrics.class0.precision.toFixed(4)}</td>
@@ -733,8 +702,11 @@
         `;
         }
 
+        /* ------------------------------
+            4) 탭 전환
+        ------------------------------ */
         function switchView(view) {
-            document.querySelectorAll(".tab-button").forEach((btn) => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
             event.target.classList.add("active");
 
             document.getElementById("DataAnalysis-view").classList.remove("active");
@@ -747,10 +719,65 @@
             }
         }
 
-        function handleDataEdit() {
-            alert("데이터 수정 기능은 추후 구현됩니다.");
+        /* ------------------------------
+            5) 파일 업로드
+        ------------------------------ */
+        function handleDataAdd() {
+            const fileInput = document.getElementById("fileInput");
+            fileInput.value = "";
+            fileInput.click();
+        }
+
+        async function onFileSelected(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            try {
+                let res;
+
+                if (files.length === 1) {
+                    const formData = new FormData();
+                    formData.append("file", files[0]);
+                    res = await fetch(`${API_BASE_URL}/upload-csv`, { method: "POST", body: formData });
+                } else {
+                    const formData = new FormData();
+                    Array.from(files).forEach(f => formData.append("files", f));
+                    res = await fetch(`${API_BASE_URL}/upload-multiple-csv`, { method: "POST", body: formData });
+                }
+
+                if (!res.ok) throw new Error("업로드 실패");
+                alert("파일 업로드 완료");
+
+            } catch (err) {
+                console.error(err);
+                alert("파일 업로드 중 오류 발생");
+            } finally {
+                event.target.value = "";
+            }
+        }
+
+        /* ------------------------------
+            6) 분석 시작 요청
+        ------------------------------ */
+        async function handleAnalyze() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/start-analysis`, {
+                    method: "POST"
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const json = await res.json().catch(() => null);
+
+                alert(json?.message || "분석을 시작했습니다.");
+
+            } catch (err) {
+                console.error(err);
+                alert("분석 시작 요청 중 오류 발생");
+            }
         }
     </script>
+
 
 </body>
 
