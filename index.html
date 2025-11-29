@@ -541,17 +541,17 @@
         let charts = {};
 
         window.addEventListener("load", () => {
-            loadDataAndInit();
             const fileInput = document.getElementById("fileInput");
             if (fileInput) {
                 fileInput.addEventListener("change", onFileSelected);
             }
         });
 
-        /* ------------------------------
-            1) 실제 백엔드 데이터 로드
-        ------------------------------ */
-        async function loadDataAndInit() {
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        async function fetchResultsAndRender() {
             try {
                 const [fiRes, cmRes, crRes, safeRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/feature-importance`),
@@ -561,7 +561,7 @@
                 ]);
 
                 if (!fiRes.ok || !cmRes.ok || !crRes.ok || !safeRes.ok) {
-                    throw new Error("API 응답 오류");
+                    throw new Error("결과 조회 API 응답 오류");
                 }
 
                 const fiData = await fiRes.json();
@@ -574,21 +574,57 @@
                 updateSummaryCards(modelData.metrics);
                 initCharts(modelData);
                 updateTable(modelData.metrics);
-
-            } catch (error) {
-                console.error(error);
-                alert("API 요청 실패: 백엔드 서버 상태를 확인하세요.");
+            } catch (err) {
+                console.error(err);
+                alert("분석 결과 조회 중 오류가 발생했습니다.");
             }
         }
 
-        /* ------------------------------
-            2) 데이터 구조 변환
-        ------------------------------ */
+        async function waitForAnalysisComplete(maxTries = 20, intervalMs = 2000) {
+            for (let i = 0; i < maxTries; i++) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/analysis-status`);
+                    if (!res.ok) throw new Error("analysis-status 응답 오류");
+                    const data = await res.json();
+                    console.log("analysis-status:", data);
+
+                    // 백엔드에서 넘겨주는 필드 이름에 맞춰야 함 (예상: { status: "pending|running|completed|failed" })
+                    const status = data.status || data.analysis_status;
+
+                    if (status === "completed") return true;
+                    if (status === "failed") throw new Error("분석 실패 상태");
+                } catch (err) {
+                    console.error("analysis-status error:", err);
+                }
+                await sleep(intervalMs);
+            }
+            throw new Error("분석 완료 대기 시간 초과");
+        }
+
+        async function runFullAnalysisFlow() {
+            try {
+                const startRes = await fetch(`${API_BASE_URL}/start-analysis`, {
+                    method: "POST"
+                });
+                if (!startRes.ok) throw new Error("start-analysis 응답 오류");
+
+                alert("분석을 시작했습니다. 분석이 완료될 때까지 잠시만 기다려 주세요.");
+
+                await waitForAnalysisComplete();
+                await fetchResultsAndRender();
+
+                alert("분석이 완료되었습니다. 화면이 최신 결과로 갱신되었습니다.");
+            } catch (err) {
+                console.error(err);
+                alert("분석 처리 중 오류가 발생했습니다.");
+            }
+        }
+
         function transformData(fiData, cmData, crData, safeData) {
             const mapping = { temp: "온도(temp)", press: "압력(press)", humid: "습도(humid)" };
             const featureImportance = {};
 
-            (fiData.feature_importance || []).forEach(item => {
+            (fiData.feature_importance || []).forEach((item) => {
                 const label = mapping[item.feature] || item.feature;
                 featureImportance[label] = item.importance;
             });
@@ -596,7 +632,7 @@
             const cm = cmData.confusion_matrix || {};
             const confusionMatrix = [
                 [cm.normal_to_normal ?? 0, cm.normal_to_defect ?? 0],
-                [cm.defect_to_normal ?? 0, cm.defect_to_defect ?? 0]
+                [cm.defect_to_normal ?? 0, cm.defect_to_defect ?? 0],
             ];
 
             const metrics = {
@@ -605,23 +641,24 @@
                     precision: crData["0"]?.precision ?? 0,
                     recall: crData["0"]?.recall ?? 0,
                     f1: crData["0"]?.["f1-score"] ?? 0,
-                    support: crData["0"]?.support ?? 0
+                    support: crData["0"]?.support ?? 0,
                 },
                 class1: {
                     precision: crData["1"]?.precision ?? 0,
                     recall: crData["1"]?.recall ?? 0,
                     f1: crData["1"]?.["f1-score"] ?? 0,
-                    support: crData["1"]?.support ?? 0
+                    support: crData["1"]?.support ?? 0,
                 },
-                safeRegion: safeData
+                safeRegion: safeData,
             };
 
-            return { confusionMatrix, featureImportance, metrics };
+            return {
+                confusionMatrix,
+                featureImportance,
+                metrics,
+            };
         }
 
-        /* ------------------------------
-            3) UI 업데이트
-        ------------------------------ */
         function updateSummaryCards(metrics) {
             document.getElementById("accuracy-value").innerText = metrics.accuracy.toFixed(4);
             document.getElementById("precision-value").innerText = metrics.class1.precision.toFixed(4);
@@ -631,11 +668,14 @@
 
         function initCharts(modelData) {
             const cmCtx = document.getElementById("confusionMatrix").getContext("2d");
-
+            if (charts.confusionMatrix) charts.confusionMatrix.destroy();
             charts.confusionMatrix = new Chart(cmCtx, {
                 type: "bar",
                 data: {
-                    labels: ["정상→정상", "정상→불량", "불량→정상", "불량→불량"],
+                    labels: [
+                        "정상→정상", "정상→불량",
+                        "불량→정상", "불량→불량"
+                    ],
                     datasets: [
                         {
                             data: [
@@ -648,28 +688,29 @@
                                 "rgba(75, 192, 192, 0.8)",
                                 "rgba(255, 99, 132, 0.8)",
                                 "rgba(255, 99, 132, 0.8)",
-                                "rgba(75, 192, 192, 0.8)"
-                            ]
-                        }
-                    ]
+                                "rgba(75, 192, 192, 0.8)",
+                            ],
+                        },
+                    ],
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
             const fiCtx = document.getElementById("featureImportance").getContext("2d");
+            if (charts.featureImportance) charts.featureImportance.destroy();
+            const features = Object.keys(modelData.featureImportance);
+            const importance = Object.values(modelData.featureImportance);
+
             charts.featureImportance = new Chart(fiCtx, {
                 type: "bar",
                 data: {
-                    labels: Object.keys(modelData.featureImportance),
+                    labels: features,
                     datasets: [
                         {
-                            data: Object.values(modelData.featureImportance),
-                            backgroundColor: "rgba(102, 126, 234, 0.8)"
-                        }
-                    ]
+                            data: importance,
+                            backgroundColor: "rgba(102, 126, 234, 0.8)",
+                        },
+                    ],
                 },
                 options: {
                     indexAxis: "y",
@@ -680,7 +721,8 @@
         }
 
         function updateTable(metrics) {
-            document.getElementById("reportBody").innerHTML = `
+            const tbody = document.getElementById("reportBody");
+            tbody.innerHTML = `
             <tr>
                 <td>정상</td>
                 <td>${metrics.class0.precision.toFixed(4)}</td>
@@ -702,11 +744,8 @@
         `;
         }
 
-        /* ------------------------------
-            4) 탭 전환
-        ------------------------------ */
         function switchView(view) {
-            document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-button").forEach((btn) => btn.classList.remove("active"));
             event.target.classList.add("active");
 
             document.getElementById("DataAnalysis-view").classList.remove("active");
@@ -719,11 +758,9 @@
             }
         }
 
-        /* ------------------------------
-            5) 파일 업로드
-        ------------------------------ */
-        function handleDataAdd() {
+        async function handleDataAdd() {
             const fileInput = document.getElementById("fileInput");
+            if (!fileInput) return;
             fileInput.value = "";
             fileInput.click();
         }
@@ -734,49 +771,45 @@
 
             try {
                 let res;
-
                 if (files.length === 1) {
                     const formData = new FormData();
                     formData.append("file", files[0]);
-                    res = await fetch(`${API_BASE_URL}/upload-csv`, { method: "POST", body: formData });
+                    res = await fetch(`${API_BASE_URL}/upload-csv`, {
+                        method: "POST",
+                        body: formData
+                    });
                 } else {
                     const formData = new FormData();
-                    Array.from(files).forEach(f => formData.append("files", f));
-                    res = await fetch(`${API_BASE_URL}/upload-multiple-csv`, { method: "POST", body: formData });
+                    Array.from(files).forEach((file) => {
+                        formData.append("files", file);
+                    });
+                    res = await fetch(`${API_BASE_URL}/upload-multiple-csv`, {
+                        method: "POST",
+                        body: formData
+                    });
                 }
 
                 if (!res.ok) throw new Error("업로드 실패");
-                alert("파일 업로드 완료");
 
+                const doAnalyze = confirm("파일 업로드가 완료되었습니다. 이 데이터로 바로 분석을 시작할까요?");
+                if (doAnalyze) {
+                    await runFullAnalysisFlow();
+                } else {
+                    alert("분석 시작 버튼을 눌러 언제든 분석을 실행할 수 있습니다.");
+                }
             } catch (err) {
                 console.error(err);
-                alert("파일 업로드 중 오류 발생");
+                alert("파일 업로드 중 오류가 발생했습니다.");
             } finally {
                 event.target.value = "";
             }
         }
 
-        /* ------------------------------
-            6) 분석 시작 요청
-        ------------------------------ */
         async function handleAnalyze() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/start-analysis`, {
-                    method: "POST"
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                const json = await res.json().catch(() => null);
-
-                alert(json?.message || "분석을 시작했습니다.");
-
-            } catch (err) {
-                console.error(err);
-                alert("분석 시작 요청 중 오류 발생");
-            }
+            await runFullAnalysisFlow();
         }
     </script>
+
 
 
 </body>
