@@ -603,7 +603,7 @@
     <input type="file" id="fileInput" style="display: none;" accept=".csv" multiple onchange="onFileSelected(event)">
 
     <script>
-        const API_BASE_URL = "http://localhost:8000";
+        const API_BASE_URL = "https://port-0-capstone2-samsung-mig4d3f30c7d6141.sel3.cloudtype.app/api/v1";
         const charts = {};
 
         async function fetchResultsAndRender() {
@@ -611,9 +611,10 @@
                 const [fi, cm, cr, sr] = await Promise.all([
                     fetch(`${API_BASE_URL}/feature-importance`).then(r => r.json()),
                     fetch(`${API_BASE_URL}/confusion-matrix`).then(r => r.json()),
-                    fetch(`${API_BASE_URL}/classification-report`).then(r => r.json()),
+                    fetch(`${API_BASE_URL}/classification-report-rf`).then(r => r.json()),
                     fetch(`${API_BASE_URL}/safe-region`).then(r => r.json())
                 ]);
+
                 const modelData = transformData(fi, cm, cr, sr);
                 updateSummaryCards(modelData.metrics);
                 initCharts(modelData);
@@ -860,6 +861,7 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
     </script>
+
 
 
 
