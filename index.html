@@ -236,7 +236,44 @@
             font-size: 0.9em;
         }
 
-        /* AI 해설 페이지 스타일 */
+        .analysis-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+
+        .analysis-overlay.hidden {
+            display: none;
+        }
+
+        .overlay-message {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay-message h3 {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .overlay-message p {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
         .ai-insight-container {
             display: none;
         }
@@ -245,7 +282,7 @@
             display: block;
         }
 
-        .insight-box {
+        .insight-card {
             background: white;
             padding: 30px;
             border-radius: 12px;
@@ -253,17 +290,28 @@
             margin-bottom: 30px;
         }
 
-        .insight-box h3 {
-            color: #667eea;
-            font-size: 1.5em;
+        .insight-header {
+            display: flex;
+            align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #667eea;
         }
 
-        .insight-content {
-            line-height: 1.8;
+        .insight-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .insight-title {
+            font-size: 1.5em;
             color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .insight-content {
+            color: #495057;
+            line-height: 1.8;
             font-size: 1.05em;
         }
 
@@ -271,309 +319,309 @@
             margin-bottom: 15px;
         }
 
-        .insight-content ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .insight-content ul li {
-            padding: 12px 20px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            border-radius: 4px;
-        }
-
         .insight-content strong {
             color: #667eea;
         }
 
         .highlight-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
             margin: 20px 0;
         }
 
-        .highlight-box h4 {
-            font-size: 1.3em;
-            margin-bottom: 15px;
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
         }
 
-        .action-item {
-            background: rgba(255, 255, 255, 0.1);
+        .recommendation-list li {
             padding: 15px;
-            margin: 10px 0;
+            margin-bottom: 10px;
+            background: #f8f9fa;
             border-radius: 8px;
-            border-left: 4px solid white;
+            border-left: 3px solid #667eea;
         }
 
-        .model-view {
-            display: none;
-        }
-
-        .model-view.active {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .tabs {
-                flex-direction: column;
-                padding: 20px;
-            }
-
-            .tab-button,
-            .action-buttons {
-                width: 100%;
-                margin-left: 0;
-                margin-top: 10px;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .action-button {
-                width: 100%;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chart-wrapper {
-                height: 300px;
-            }
+        .recommendation-list li::before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
         }
     </style>
 </head>
-<input type="file" id="fileInput" multiple style="display:none" />
 
 <body>
     <div class="container">
         <div class="header">
-            <h1>전해탈지 공정 데이터 분석</h1>
-            <h2>AI를 활용한 데이터 분석 결과 및 해설</h2>
+            <h1>전해탈지 공정 데이터 분석 대시보드</h1>
+            <h2>RandomForest 모델 성능 분석</h2>
         </div>
 
         <div class="tabs">
             <button class="tab-button active" onclick="switchView('DataAnalysis')">데이터 분석 결과</button>
-            <button class="tab-button" onclick="switchView('AIInsight')">🤖 AI 해설</button>
+            <button class="tab-button" onclick="switchView('AIInsight')">AI 해설</button>
+
             <div class="action-buttons">
-                <button class="action-button" onclick="handleDataAdd()">📁 데이터 추가</button>
-                <button class="action-button primary" onclick="handleAnalyze()">▶️ 분석 시작</button>
+                <button class="action-button" onclick="handleDataAdd()">데이터 추가</button>
+                <button class="action-button primary" onclick="handleAnalyze()">분석 시작</button>
             </div>
         </div>
 
-        <div class="content">
-            <!-- Data Analysis View -->
-            <div id="DataAnalysis-view" class="model-view active">
-                <!-- Summary Metrics -->
+        <div id="DataAnalysis-view" class="active">
+            <div class="content">
                 <div class="section">
-                    <h2 class="section-title">💯 AI 불량 검출 성적표</h2>
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-value" id="accuracy-value">--</div>
-                            <div class="metric-label">정확도</div>
-                            <div class="metric-description">전체 제품 중 정확하게 판단한 비율입니다. 높을 수록 정확히 판단했다는 증거가 돼요.</div>
+                    <h2 class="section-title">핵심 성능 지표</h2>
+                    <div class="metrics-grid" style="position: relative;">
+                        <div class="analysis-overlay" id="metrics-overlay">
+                            <div class="overlay-message">
+                                <h3>📊 데이터 분석 대기 중</h3>
+                                <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
+                            </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="precision-value">--</div>
-                            <div class="metric-label">정밀도 (불량 판정)</div>
-                            <div class="metric-description">불량이라고 판단한 것 중 실제로 불량인 비율입니다. 오탐이 적을수록 좋아요.</div>
+                            <div class="metric-label">정확도 (Accuracy)</div>
+                            <div class="metric-value" id="accuracy-value">0.0000</div>
+                            <div class="metric-description">전체 예측 중 올바르게 판단한 비율입니다. 높을수록 AI가 정상/불량
+                                제품을 정확하게 구분합니다.</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="recall-value">--</div>
-                            <div class="metric-label">검출률 (불량 발견)</div>
-                            <div class="metric-description">실제 불량 중 AI가 찾아낸 비율입니다. 놓치는 불량이 적을수록 좋아요.</div>
+                            <div class="metric-label">정밀도 (Precision)</div>
+                            <div class="metric-value" id="precision-value">0.0000</div>
+                            <div class="metric-description">불량으로 판단한 것 중 실제 불량인 비율입니다. 높을수록 불량 판단이 신뢰할 수
+                                있습니다.</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="f1-value">--</div>
-                            <div class="metric-label">종합 점수</div>
-                            <div class="metric-description">정밀도와 검출률의 균형을 나타냅니다. 1에 가까울수록 우수해요.</div>
+                            <div class="metric-label">재현율 (Recall)</div>
+                            <div class="metric-value" id="recall-value">0.0000</div>
+                            <div class="metric-description">실제 불량 제품 중 올바르게 찾아낸 비율입니다. 높을수록 불량 제품을 놓치지 않고
+                                찾아냅니다.</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">F1 점수 (F1-Score)</div>
+                            <div class="metric-value" id="f1-value">0.0000</div>
+                            <div class="metric-description">정밀도와 재현율의 균형을 나타내는 종합 점수입니다. 높을수록 AI의 불량 감지
+                                성능이 우수합니다.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Confusion Matrix -->
                 <div class="section">
-                    <h2 class="section-title">🎯 AI가 얼마나 정확하게 판단했을까요?</h2>
-                    <div class="chart-container">
+                    <h2 class="section-title">시각화 분석</h2>
+                    <div class="chart-container" style="position: relative;">
+                        <div class="analysis-overlay" id="cm-overlay">
+                            <div class="overlay-message">
+                                <h3>📊 데이터 분석 대기 중</h3>
+                                <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
+                            </div>
+                        </div>
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">혼동 행렬 (Confusion Matrix)</h3>
                         <div class="chart-wrapper">
                             <canvas id="confusionMatrix"></canvas>
                         </div>
                         <div class="chart-caption">
-                            <strong>📊 이 그래프는 무엇을 보여주나요?</strong><br>
-                            AI의 판단 결과를 4가지로 나눠 보여줍니다. 초록색 막대는 정확한 판단, 빨간색 막대는 잘못된 판단입니다.
-                            빨간색 막대가 작을수록 AI가 실수를 적게 했다는 뜻이에요.<br>
-                            <em>※ 'A→B'는 실제로는 A였으나 AI가 B라고 판단했다는 것을 뜻합니다.</em>
+                            <strong>💡 이 그래프는 무엇을 의미하나요?</strong><br>
+                            AI가 제품을 어떻게 판단했는지 보여줍니다. 각 막대는 다음을 의미합니다:<br>
+                            • <strong style="color: #4bc0c0;">정상→정상 (정확한 판단)</strong>: 정상 제품을 정상으로 올바르게
+                            판단<br>
+                            • <strong style="color: #ff6384;">정상→불량 (잘못된 판단)</strong>: 정상 제품을 불량으로 잘못
+                            판단<br>
+                            • <strong style="color: #ff6384;">불량→정상 (잘못된 판단)</strong>: 불량 제품을 정상으로 잘못
+                            판단<br>
+                            • <strong style="color: #4bc0c0;">불량→불량 (정확한 판단)</strong>: 불량 제품을 불량으로 올바르게
+                            판단<br>
+                            녹색 막대가 높고 빨간색 막대가 낮을수록 AI의 판단이 정확합니다.
                         </div>
                     </div>
-                </div>
 
-                <!-- Feature Importance -->
-                <div class="section">
-                    <h2 class="section-title">🔍 어떤 요소가 불량을 판단하는데 가장 중요할까요?</h2>
-                    <div class="chart-container">
+                    <div class="chart-container" style="position: relative;">
+                        <div class="analysis-overlay" id="fi-overlay">
+                            <div class="overlay-message">
+                                <h3>📊 데이터 분석 대기 중</h3>
+                                <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
+                            </div>
+                        </div>
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">중요도 분석 (Feature Importance)</h3>
                         <div class="chart-wrapper">
                             <canvas id="featureImportance"></canvas>
                         </div>
                         <div class="chart-caption">
-                            <strong>📊 이 그래프는 무엇을 보여주나요?</strong><br>
-                            AI가 불량을 판단할 때 각 요소(온도, 압력, 습도)를 얼마나 중요하게 보는지 나타냅니다.
-                            막대가 길수록 그 요소가 불량 판정에 큰 영향을 미친다는 의미입니다.
+                            <strong>💡 이 그래프는 무엇을 의미하나요?</strong><br>
+                            제품 품질에 가장 큰 영향을 미치는 요인을 보여줍니다. 막대가 길수록 해당 요인이 불량/정상을 결정하는 데 더 중요한 역할을 합니다.<br>
+                            예를 들어, 온도의 막대가 가장 길다면 온도 관리가 품질에 가장 중요하다는 의미입니다.
                         </div>
                     </div>
                 </div>
 
-                <!-- Classification Report -->
                 <div class="section">
-                    <h2 class="section-title">📋 상세 성능 리포트</h2>
-                    <div class="table-container">
-                        <table id="classificationReport">
+                    <h2 class="section-title">상세 성능 보고서</h2>
+                    <div class="table-container" style="position: relative;">
+                        <div class="analysis-overlay" id="table-overlay">
+                            <div class="overlay-message">
+                                <h3>📊 데이터 분석 대기 중</h3>
+                                <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
+                            </div>
+                        </div>
+                        <table>
                             <thead>
                                 <tr>
                                     <th>구분</th>
-                                    <th>정밀도</th>
-                                    <th>검출률</th>
-                                    <th>종합점수</th>
-                                    <th>제품 수</th>
+                                    <th>정밀도 (Precision)</th>
+                                    <th>재현율 (Recall)</th>
+                                    <th>F1 점수</th>
+                                    <th>샘플 수</th>
                                 </tr>
                             </thead>
                             <tbody id="reportBody">
+                                <tr>
+                                    <td>정상</td>
+                                    <td>0.0000</td>
+                                    <td>0.0000</td>
+                                    <td>0.0000</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>불량</td>
+                                    <td>0.0000</td>
+                                    <td>0.0000</td>
+                                    <td>0.0000</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>정확도</td>
+                                    <td colspan="4">0.0000</td>
+                                </tr>
                             </tbody>
                         </table>
-                        <div class="chart-caption">
-                            <strong>📊 표를 어떻게 읽나요?</strong><br>
-                            <strong>정상 제품:</strong> AI가 정상 제품을 얼마나 잘 판단했는지 보여줍니다.<br>
-                            <strong>불량 제품:</strong> AI가 불량 제품을 얼마나 잘 찾아냈는지 보여줍니다.<br>
-                            <strong>전체 정확도:</strong> 모든 제품을 종합했을 때의 정확도입니다.<br>
-                            숫자가 1에 가까울수록 더 좋은 성능입니다!
-                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- AI Insight View -->
-            <div id="AIInsight-view" class="ai-insight-container">
-                <div class="section">
-                    <h2 class="section-title">🤖 AI 분석 결론 및 공정 개선 제안</h2>
-
-                    <div class="insight-box">
-                        <h3>🖥️ 공정 상태 요약</h3>
-                        <div class="insight-content">
-                            <p>
-                                전해탈지 공정은 온도, 습도, 압력이 일정 범위 안에 있을 때 불량이 거의 발생하지 않는 안정적인 상태로 보입니다. 특히 온도는 약 44~55℃, 습도는
-                                25~36%, 압력은 65~83 수준에서 운전될 때 양품 비율이 높게 유지됩니다. 이 구간에 해당하는 데이터가 600건 이상 모였다는 점을 보면, 현재 공정은
-                                이
-                                범위를 기준으로 관리해도 무리가 없을 만큼 충분한 운영 경험이 쌓인 상태라고 볼 수 있습니다.
-                            </p>
+        <div class="ai-insight-container" id="AIInsight-view" style="position: relative;">
+            <div class="analysis-overlay" id="ai-overlay">
+                <div class="overlay-message">
+                    <h3>🤖 AI 해설 대기 중</h3>
+                    <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
+                </div>
+            </div>
+            <div class="content">
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">🎯</span>
+                        <h3 class="insight-title">AI 모델 성능 종합 평가</h3>
+                    </div>
+                    <div class="insight-content">
+                        <p>현재 AI 모델은 전해탈지 공정에서 <strong>불량 제품을 감지하는 작업</strong>을 수행하고 있습니다.</p>
+                        <div class="highlight-box">
+                            <p><strong>📊 핵심 성능 지표</strong></p>
+                            <p>• <strong>정확도</strong>: AI가 전체 제품 중 정상과 불량을 올바르게 구분한 비율입니다.</p>
+                            <p>• <strong>정밀도</strong>: 불량이라고 판단한 제품 중 실제로 불량인 비율입니다. 이 수치가 높으면 불필요한 폐기를
+                                줄일 수 있습니다.</p>
+                            <p>• <strong>재현율</strong>: 실제 불량 제품 중 AI가 찾아낸 비율입니다. 이 수치가 높으면 불량 제품이 시장에 나가는
+                                것을 방지할 수 있습니다.</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="insight-box">
-                        <h3>🛠️ 관리자용 안전 운전 가이드</h3>
-                        <div class="insight-content">
-                            <ul>
-                                <li>
-                                    온도는 44~55℃ 사이를 기본 목표 구간으로 설정하고, 이 범위를 벗어나면 먼저 온도 제어 계통을 확인해 주세요.
-                                </li>
-                                <li>
-                                    습도는 25~36% 구간을 유지하는 것을 권장하며, 특히 겨울철·우기처럼 외부 환경이 달라지는 시기에 가습/제습 장치 세팅을 사전에 조정하는 것이
-                                    좋습니다.
-                                </li>
-                                <li>
-                                    압력은 65~83 수준에서 안정적으로 유지되도록 하고, 설비 점검이나 라인 변경 시 압력 변화가 큰지 꼭 확인해 주세요.
-                                </li>
-                                <li>
-                                    설비 자동제어가 있다면, 이 안전 구간을 기준으로 상·하한 알람 값을 설정해 두면 현장에서 즉시 이상 여부를 파악하기 쉽습니다.
-                                </li>
-                                <li>
-                                    신규 작업 조건을 적용할 때는, 처음에는 이 안전 구간 안에서만 시범 운영하고, 문제가 없을 때 점차 범위를 조정하는 방식으로 변화폭을 관리하는
-                                    것이 안전합니다.
-                                </li>
-                            </ul>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">🔍</span>
+                        <h3 class="insight-title">혼동 행렬 해석</h3>
+                    </div>
+                    <div class="insight-content">
+                        <p>혼동 행렬은 AI의 판단이 얼마나 정확한지 <strong>4가지 경우로 나누어</strong> 보여줍니다.</p>
+                        <p><strong>이상적인 상황</strong>: 녹색으로 표시된 "정확한 판단" 막대(정상→정상, 불량→불량)가 높고, 빨간색으로 표시된
+                            "잘못된 판단" 막대(정상→불량, 불량→정상)가 낮아야 합니다.</p>
+                        <div class="highlight-box">
+                            <p><strong>⚠️ 주의해야 할 경우</strong></p>
+                            <p>• <strong>정상→불량이 높은 경우</strong>: 멀쩡한 제품을 불량으로 잘못 판단하여 불필요한 폐기가 발생합니다.</p>
+                            <p>• <strong>불량→정상이 높은 경우</strong>: 불량 제품을 정상으로 잘못 판단하여 품질 문제가 발생할 수 있습니다.</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="insight-box">
-                        <h3>👀 추가로 모니터링하면 좋은 포인트</h3>
-                        <div class="insight-content">
-                            <ul>
-                                <li>
-                                    온도·습도·압력 중 어느 하나만 안전 구간을 벗어나도 불량이 늘어나는 패턴이 있는지 주기적으로 확인해 주세요.
-                                </li>
-                                <li>
-                                    하루·주간 단위로 시간대별 센서 추세 그래프를 확인해, 특정 시간(예: 교대 직후, 설비 기동 직후)에만 조건이 흔들리지 않는지 점검하는 것이
-                                    좋습니다.
-                                </li>
-                                <li>
-                                    안전 구간 밖에서 발생한 불량 사례를 따로 모아, 어떤 조합(예: 높은 온도 + 낮은 습도)에서 문제가 두드러지는지 간단히 비교해 보면, 다음 개선
-                                    과제를 뽑아내는 데 도움이 됩니다.
-                                </li>
-                                <li>
-                                    계절 교체 시기나 설비 정기 점검 이후에는, 안전 구간과 실제 운전 값이 얼마나 차이가 나는지를 체크하여, 세팅 값이 바뀌지 않았는지 확인해
-                                    주세요.
-                                </li>
-                            </ul>
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">📈</span>
+                        <h3 class="insight-title">중요 공정 변수 분석</h3>
+                    </div>
+                    <div class="insight-content">
+                        <p>중요도 분석 그래프는 <strong>어떤 공정 조건이 제품 품질에 가장 큰 영향을 미치는지</strong> 보여줍니다.</p>
+                        <p>막대가 긴 변수일수록 품질 관리에서 더 세심한 주의가 필요합니다. 예를 들어:</p>
+                        <ul class="recommendation-list">
+                            <li><strong>온도</strong>가 가장 중요하다면: 온도 변화를 최소화하고 설정값을 엄격히 유지해야 합니다.</li>
+                            <li><strong>압력</strong>이 중요하다면: 압력 모니터링을 강화하고 이상 징후를 빠르게 감지해야 합니다.</li>
+                            <li><strong>습도</strong>가 중요하다면: 작업 환경의 습도 관리에 더 신경 써야 합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">💡</span>
+                        <h3 class="insight-title">안전 운영 구간 가이드</h3>
+                    </div>
+                    <div class="insight-content">
+                        <p>AI 분석을 통해 <strong>불량이 적게 발생하는 최적의 공정 조건 범위</strong>를 파악할 수 있습니다.</p>
+                        <div class="highlight-box">
+                            <p><strong>🎯 권장 운영 범위 (예시)</strong></p>
+                            <p>• 온도: 44~55℃ 범위 유지</p>
+                            <p>• 습도: 25~36% 범위 유지</p>
+                            <p>• 압력: 65~83 범위 유지</p>
                         </div>
+                        <p><strong>이 범위를 벗어나면</strong> 불량 발생 확률이 높아지므로, 가능한 한 권장 범위 내에서 공정을 운영하는 것이
+                            좋습니다.</p>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">✅</span>
+                        <h3 class="insight-title">실무 활용 가이드</h3>
+                    </div>
+                    <div class="insight-content">
+                        <p>이 대시보드를 활용하여 <strong>데이터 기반 의사결정</strong>을 할 수 있습니다:</p>
+                        <ul class="recommendation-list">
+                            <li>정기적으로 모델 성능을 확인하고, 정확도가 떨어지면 재학습이 필요합니다.</li>
+                            <li>중요도가 높은 변수는 더 자주 점검하고 기록을 남깁니다.</li>
+                            <li>안전 운영 구간을 작업 지침에 반영하여 작업자들이 참고할 수 있도록 합니다.</li>
+                            <li>불량 판단이 잘못된 경우(혼동 행렬의 빨간색 부분)의 원인을 분석하여 개선점을 찾습니다.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            삼성, 종합설계프로젝트2
+            &copy; 2024 전해탈지 공정 최적화 프로젝트. 모든 권리 보유.
         </div>
     </div>
 
+    <input type="file" id="fileInput" style="display: none;" accept=".csv" multiple onchange="onFileSelected(event)">
+
     <script>
-        const API_BASE_URL = "https://port-0-capstone2-samsung-mig4d3f30c7d6141.sel3.cloudtype.app/api/v1";
-        let charts = {};
-
-        window.addEventListener("load", () => {
-            const fileInput = document.getElementById("fileInput");
-            if (fileInput) {
-                fileInput.addEventListener("change", onFileSelected);
-            }
-        });
-
-        function sleep(ms) {
-            return new Promise((resolve) => setTimeout(resolve, ms));
-        }
+        const API_BASE_URL = "http://localhost:8000";
+        const charts = {};
 
         async function fetchResultsAndRender() {
             try {
-                const [fiRes, cmRes, crRes, safeRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/feature-importance`),
-                    fetch(`${API_BASE_URL}/confusion-matrix`),
-                    fetch(`${API_BASE_URL}/classification-report-rf`),
-                    fetch(`${API_BASE_URL}/safe-region`)
+                const [fi, cm, cr, sr] = await Promise.all([
+                    fetch(`${API_BASE_URL}/feature-importance`).then(r => r.json()),
+                    fetch(`${API_BASE_URL}/confusion-matrix`).then(r => r.json()),
+                    fetch(`${API_BASE_URL}/classification-report`).then(r => r.json()),
+                    fetch(`${API_BASE_URL}/safe-region`).then(r => r.json())
                 ]);
-
-                if (!fiRes.ok || !cmRes.ok || !crRes.ok || !safeRes.ok) {
-                    throw new Error("결과 조회 API 응답 오류");
-                }
-
-                const fiData = await fiRes.json();
-                const cmData = await cmRes.json();
-                const crData = await crRes.json();
-                const safeData = await safeRes.json();
-
-                const modelData = transformData(fiData, cmData, crData, safeData);
-
+                const modelData = transformData(fi, cm, cr, sr);
                 updateSummaryCards(modelData.metrics);
                 initCharts(modelData);
                 updateTable(modelData.metrics);
+
+                document.querySelectorAll('.analysis-overlay').forEach(overlay => {
+                    overlay.classList.add('hidden');
+                });
             } catch (err) {
                 console.error(err);
                 alert("분석 결과 조회 중 오류가 발생했습니다.");
@@ -588,7 +636,6 @@
                     const data = await res.json();
                     console.log("analysis-status:", data);
 
-                    // 백엔드에서 넘겨주는 필드 이름에 맞춰야 함 (예상: { status: "pending|running|completed|failed" })
                     const status = data.status || data.analysis_status;
 
                     if (status === "completed") return true;
@@ -807,6 +854,10 @@
 
         async function handleAnalyze() {
             await runFullAnalysisFlow();
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     </script>
 
