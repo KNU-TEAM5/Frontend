@@ -653,23 +653,40 @@
                 const startRes = await fetch(`${API_BASE_URL}/start-analysis`, {
                     method: "POST"
                 });
-                if (!startRes.ok) {
-                    throw new Error("start-analysis 응답 오류");
+
+                // 🔎 디버그용: 상태 코드 + 응답 내용 확인
+                let debugText = "";
+                try {
+                    debugText = await startRes.text();
+                } catch (e) {
+                    debugText = "(응답 body를 읽지 못했음)";
                 }
 
+                if (!startRes.ok) {
+                    alert(
+                        `start-analysis 실패\n` +
+                        `HTTP 상태코드: ${startRes.status}\n` +
+                        `응답 내용: ${debugText}`
+                    );
+                    console.error("start-analysis error:", startRes.status, debugText);
+                    return;
+                }
+
+                // 여기까지 왔다 = start-analysis 2xx 성공
+                // 이제 상태 폴링 → 결과 조회
                 await waitForAnalysisCompleted({
                     intervalMs: 2000,
-                    timeoutMs: 5 * 60 * 1000 
+                    timeoutMs: 5 * 60 * 1000
                 });
 
                 await fetchResultsAndRender();
-
                 alert("분석이 완료되었습니다. 화면이 최신 결과로 갱신되었습니다.");
             } catch (err) {
                 console.error(err);
                 alert("분석 처리 중 오류가 발생했습니다.\n" + err.message);
             }
         }
+
 
         function transformData(fiData, cmData, crData, safeData) {
             const mapping = { temp: "온도(temp)", press: "압력(press)", humid: "습도(humid)" };
@@ -861,8 +878,8 @@
         }
 
         async function waitForAnalysisCompleted({
-            intervalMs = 2000,   
-            timeoutMs = 5 * 60 * 1000 
+            intervalMs = 2000,
+            timeoutMs = 5 * 60 * 1000
         } = {}) {
             const startTime = Date.now();
 
