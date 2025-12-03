@@ -614,7 +614,6 @@
             return new Promise((resolve) => setTimeout(resolve, ms));
         }
 
-        // 1) 분석 결과 조회 + 화면 갱신
         async function fetchResultsAndRender() {
             try {
                 const [fiRes, cmRes, crRes, safeRes] = await Promise.all([
@@ -649,23 +648,26 @@
             }
         }
 
-        // 2) 분석 시작 → 바로 결과 조회 (analysis-status 폴링 제거)
         async function runFullAnalysisFlow() {
             try {
                 const startRes = await fetch(`${API_BASE_URL}/start-analysis`, {
                     method: "POST"
                 });
-                if (!startRes.ok) throw new Error("start-analysis 응답 오류");
+                if (!startRes.ok) {
+                    throw new Error("start-analysis 응답 오류");
+                }
 
-                // 필요하면 여기서 "분석 중..." 같은 안내를 띄울 수 있음
-                // alert("분석을 시작했습니다. 잠시 후 결과를 불러옵니다.");
+                await waitForAnalysisCompleted({
+                    intervalMs: 2000,
+                    timeoutMs: 5 * 60 * 1000 
+                });
 
                 await fetchResultsAndRender();
 
                 alert("분석이 완료되었습니다. 화면이 최신 결과로 갱신되었습니다.");
             } catch (err) {
                 console.error(err);
-                alert("분석 처리 중 오류가 발생했습니다.");
+                alert("분석 처리 중 오류가 발생했습니다.\n" + err.message);
             }
         }
 
@@ -857,6 +859,38 @@
         async function handleAnalyze() {
             await runFullAnalysisFlow();
         }
+
+        async function waitForAnalysisCompleted({
+            intervalMs = 2000,   
+            timeoutMs = 5 * 60 * 1000 
+        } = {}) {
+            const startTime = Date.now();
+
+            while (true) {
+                const res = await fetch(`${API_BASE_URL}/analysis-status`);
+                if (!res.ok) {
+                    throw new Error("analysis-status 조회 실패");
+                }
+
+                const data = await res.json();
+                const status = data.status;
+
+                if (status === "completed") {
+                    return;
+                }
+                if (status === "error") {
+                    throw new Error(data.result?.error || "분석 중 오류 발생");
+                }
+
+                if (Date.now() - startTime > timeoutMs) {
+                    throw new Error("분석이 너무 오래 걸립니다. (timeout)");
+                }
+
+                await sleep(intervalMs);
+            }
+        }
+
+
     </script>
 
 
