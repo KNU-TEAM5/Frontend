@@ -408,6 +408,7 @@
             <button class="tab-button" onclick="switchView('AIInsight')">🤖 AI 해설</button>
             <div class="action-buttons">
                 <button class="action-button" onclick="handleDataAdd()">📁 데이터 추가</button>
+                <button class="action-button" onclick="openDataCleanup()">🗑️ 데이터 정리</button>
                 <button class="action-button primary" onclick="handleAnalyze()">▶️ 분석 시작</button>
             </div>
         </div>
@@ -599,6 +600,34 @@
         </div>
     </div>
 
+    <div id="dataCleanupModal" style="
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;">
+        <div style="
+        background: white;
+        padding: 25px;
+        width: 420px;
+        max-height: 70vh;
+        overflow-y: auto;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    ">
+            <h2 style="margin-bottom: 15px; color:#667eea;">📁 업로드된 데이터 목록</h2>
+
+            <div id="sensorFilesContainer">불러오는 중...</div>
+
+            <button onclick="closeDataCleanup()" style="margin-top: 20px; width: 100%; padding: 10px;
+                   background:#667eea; color:white; border:none; border-radius:8px;">
+                닫기
+            </button>
+        </div>
+    </div>
+
     <script>
         const API_BASE_URL = "https://port-0-capstone2-samsung-mig4d3f30c7d6141.sel3.cloudtype.app/api/v1";
         let charts = {};
@@ -672,8 +701,6 @@
                     return;
                 }
 
-                // 여기까지 왔다 = start-analysis 2xx 성공
-                // 이제 상태 폴링 → 결과 조회
                 await waitForAnalysisCompleted({
                     intervalMs: 2000,
                     timeoutMs: 5 * 60 * 1000
@@ -684,6 +711,80 @@
             } catch (err) {
                 console.error(err);
                 alert("분석 처리 중 오류가 발생했습니다.\n" + err.message);
+            }
+        }
+
+        function openDataCleanup() {
+            const modal = document.getElementById("dataCleanupModal");
+            modal.style.display = "flex";
+            loadSensorFiles(); 
+        }
+
+        function closeDataCleanup() {
+            const modal = document.getElementById("dataCleanupModal");
+            modal.style.display = "none";
+        }
+
+        async function loadSensorFiles() {
+            const container = document.getElementById("sensorFilesContainer");
+            container.innerHTML = "불러오는 중...";
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/sensor-files`);
+                if (!res.ok) {
+                    container.innerHTML = `목록 조회 실패: ${res.status}`;
+                    return;
+                }
+
+                const data = await res.json();
+                const files = data.sensor_files || [];
+
+                if (files.length === 0) {
+                    container.innerHTML = "<p>등록된 센서 파일이 없습니다.</p>";
+                    return;
+                }
+
+                const listHtml = files.map(f => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="word-break:break-all;">${f}</span>
+                <button 
+                    style="padding:4px 8px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:6px;"
+                    onclick="deleteSensorFile('${encodeURIComponent(f)}')"
+                >삭제</button>
+            </div>
+        `).join("");
+
+                container.innerHTML = listHtml;
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = "목록을 불러오는 중 오류 발생.";
+            }
+        }
+
+        async function deleteSensorFile(encodedName) {
+            const filename = decodeURIComponent(encodedName);
+
+            const ok = confirm(`정말 삭제할까요?\n${filename}`);
+            if (!ok) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/sensor-files/${encodedName}`, {
+                    method: "DELETE"
+                });
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    alert(`삭제 실패 (${res.status})\n${text}`);
+                    return;
+                }
+
+                alert("삭제 완료!");
+                loadSensorFiles(); 
+
+            } catch (err) {
+                console.error(err);
+                alert("삭제 중 오류 발생");
             }
         }
 
