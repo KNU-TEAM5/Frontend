@@ -326,6 +326,88 @@
             color: #667eea;
         }
 
+        .process-summary-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .summary-stats-card,
+        .summary-graph-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1 1 260px;
+        }
+
+        .summary-stats-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .summary-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.98em;
+        }
+
+        .summary-stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-stat-total {
+            font-weight: 600;
+        }
+
+        .summary-stat-label {
+            color: #495057;
+        }
+
+        .summary-stat-value {
+            font-weight: 600;
+            color: #343a40;
+        }
+
+        .summary-graph-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .summary-graph-wrapper {
+            width: 100%;
+            max-width: 240px;
+            margin: 0 auto 12px auto;
+        }
+
+        #defectRateChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .summary-text-block {
+            margin-top: 8px;
+            font-size: 0.96em;
+            line-height: 1.6;
+            color: #343a40;
+        }
+
+        .summary-text-block strong {
+            color: #212529;
+        }
+
+        @media (max-width: 768px) {
+            .process-summary-grid {
+                flex-direction: column;
+            }
+        }
+
+
         .highlight-box {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -405,7 +487,7 @@
 
         <div class="tabs">
             <button class="tab-button active" onclick="switchView('DataAnalysis')">데이터 분석 결과</button>
-            <button class="tab-button" onclick="switchView('AIInsight')">🤖 AI 해설</button>
+            <button class="tab-button" onclick="switchView('AIInsight')">🖥️ 공정 요약</button>
             <div class="action-buttons">
                 <button class="action-button" onclick="openDataCleanup()">📁 데이터 추가</button>
                 <button class="action-button primary" onclick="handleAnalyze()">▶️ 분석 시작</button>
@@ -524,22 +606,53 @@
             <div class="ai-insight-container" id="AIInsight-view" style="position: relative;">
                 <div class="analysis-overlay" id="ai-overlay">
                     <div class="overlay-message">
-                        <h3>🤖 AI 해설 대기 중</h3>
+                        <h3>🖥️ 공정 요약 대기 중</h3>
                         <p>'분석 시작' 버튼을 눌러<br>분석을 시작해주세요</p>
                     </div>
                 </div>
                 <div class="section">
-                    <h2 class="section-title">🤖 AI 분석 결론 및 공정 개선 제안</h2>
+                    <h2 class="section-title">🖥️ 공정 요약 및 공정 상태 총평</h2>
 
                     <div class="insight-box">
-                        <h3>🖥️ 공정 상태 요약</h3>
+                        <h3>📌 공정 상태 총평</h3>
                         <div class="insight-content">
-                            <p>
-                                전해탈지 공정은 온도, 습도, 압력이 일정 범위 안에 있을 때 불량이 거의 발생하지 않는 안정적인 상태로 보입니다. 특히 온도는 약 44~55℃, 습도는
-                                25~36%, 압력은 65~83 수준에서 운전될 때 양품 비율이 높게 유지됩니다. 이 구간에 해당하는 데이터가 600건 이상 모였다는 점을 보면, 현재 공정은
-                                이
-                                범위를 기준으로 관리해도 무리가 없을 만큼 충분한 운영 경험이 쌓인 상태라고 볼 수 있습니다.
-                            </p>
+                            <div class="process-summary-grid">
+                                <div class="summary-stats-card">
+                                    <div class="summary-stats-title">제품 개수 요약</div>
+
+                                    <div class="summary-stat-row">
+                                        <span class="summary-stat-label">정상 제품</span>
+                                        <span id="normal-count" class="summary-stat-value">-</span>
+                                    </div>
+
+                                    <div class="summary-stat-row">
+                                        <span class="summary-stat-label">불량 제품</span>
+                                        <span id="defect-count" class="summary-stat-value">-</span>
+                                    </div>
+
+                                    <div class="summary-stat-row summary-stat-total">
+                                        <span class="summary-stat-label">전체 제품 수</span>
+                                        <span id="total-count" class="summary-stat-value">-</span>
+                                    </div>
+                                </div>
+                                <div class="summary-graph-card">
+                                    <div class="summary-graph-title">불량률</div>
+                                    <div class="summary-graph-wrapper">
+                                        <canvas id="defectRateChart"></canvas>
+                                    </div>
+                                    <div class="summary-text-block">
+                                        <p>
+                                            <strong>불량률이
+                                                <span id="defect-rate-text">-</span>
+                                                입니다.
+                                            </strong>
+                                        </p>
+                                        <p id="defect-summary-text">
+                                            분석이 완료되면 공정 상태에 대한 코멘트가 표시됩니다.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -620,7 +733,8 @@
 
             <div id="sensorFilesContainer">불러오는 중...</div>
 
-            <button onclick="handleDataAdd()" style="margin-top: 20px; width: 100%; padding: 10px;
+            <button onclick="handleDataAdd()"
+                style="margin-top: 20px; width: 100%; padding: 10px;
                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; font-weight: 600;">
                 데이터 추가
             </button>
@@ -668,8 +782,99 @@
                 const modelData = transformData(fiData, cmData, crData, safeData);
 
                 updateSummaryCards(modelData.metrics);
+                updateDefectSummary(modelData.metrics);
                 initCharts(modelData);
                 updateTable(modelData.metrics);
+
+                function updateDefectSummary(metrics) {
+                    const normalCount = metrics.class0.support || 0;
+                    const defectCount = metrics.class1.support || 0;
+                    const total = normalCount + defectCount;
+                    const defectRate = total > 0 ? (defectCount / total) * 100 : 0;
+
+                    // 숫자 업데이트
+                    const normalEl = document.getElementById("normal-count");
+                    const defectEl = document.getElementById("defect-count");
+                    const totalEl = document.getElementById("total-count");
+                    const rateEl = document.getElementById("defect-rate-text");
+                    const summaryEl = document.getElementById("defect-summary-text");
+
+                    if (normalEl) normalEl.innerText = normalCount.toLocaleString();
+                    if (defectEl) defectEl.innerText = defectCount.toLocaleString();
+                    if (totalEl) totalEl.innerText = total.toLocaleString();
+                    if (rateEl) rateEl.innerText = `${defectRate.toFixed(2)}%`;
+
+                    let lines = [];
+                    if (defectRate < 1) {
+                        lines = [
+                            "불량률이 매우 낮은 우수한 공정 상태입니다.",
+                            "현재 운전 조건과 설비 관리가 안정적으로 유지되고 있습니다.",
+                            "현 수준을 유지하면서 이상 징후를 조기에 감지할 수 있도록 모니터링만 꾸준히 이어가는 것을 권장합니다."
+                        ];
+                    } else if (defectRate < 5) {
+                        lines = [
+                            "불량률이 낮은 편이지만, 관리가 필요한 구간입니다.",
+                            "특정 시간대나 조건에서 불량이 집중되는지 주기적으로 점검하는 것이 좋습니다.",
+                            "현 수준을 유지하면서 공정 조건 튜닝과 설비 점검을 통해 한 단계 더 개선하는 것을 추천합니다."
+                        ];
+                    } else {
+                        lines = [
+                            "불량률이 높은 편이므로 즉각적인 원인 분석과 개선 조치가 필요합니다.",
+                            "온도·습도·압력 조건과 설비 상태를 우선적으로 점검하고, 문제 구간의 데이터를 별도로 분석하는 것이 좋습니다.",
+                            "단기적으로는 공정 조건을 안전 구간으로 되돌리고, 장기적으로는 자동 모니터링 및 알림 체계를 강화하는 것을 권장합니다."
+                        ];
+                    }
+
+                    if (summaryEl) {
+                        summaryEl.innerHTML = lines.join("<br>");
+                    }
+
+                    // 불량률 도넛 그래프
+                    const canvas = document.getElementById("defectRateChart");
+                    if (!canvas) return;
+
+                    const ctx = canvas.getContext("2d");
+                    if (charts.defectRate) {
+                        charts.defectRate.destroy();
+                    }
+
+                    charts.defectRate = new Chart(ctx, {
+                        type: "doughnut",
+                        data: {
+                            labels: ["정상", "불량"],
+                            datasets: [
+                                {
+                                    data: [normalCount, defectCount],
+                                    backgroundColor: [
+                                        "rgba(75, 192, 192, 0.8)",
+                                        "rgba(255, 99, 132, 0.8)"
+                                    ],
+                                    borderWidth: 0
+                                }
+                            ]
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            cutout: "60%",
+                            plugins: {
+                                legend: {
+                                    position: "bottom"
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            const label = context.label || "";
+                                            const value = context.parsed || 0;
+                                            const pct = total > 0 ? (value / total * 100).toFixed(1) : "0.0";
+                                            return `${label}: ${value}개 (${pct}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
 
                 // 분석 완료 후 오버레이 숨기기
                 document.querySelectorAll(".analysis-overlay").forEach(el => {
@@ -721,7 +926,7 @@
         function openDataCleanup() {
             const modal = document.getElementById("dataCleanupModal");
             modal.style.display = "flex";
-            loadSensorFiles(); 
+            loadSensorFiles();
         }
 
         function closeDataCleanup() {
@@ -784,7 +989,7 @@
                 }
 
                 alert("삭제 완료!");
-                loadSensorFiles(); 
+                loadSensorFiles();
 
             } catch (err) {
                 console.error(err);
