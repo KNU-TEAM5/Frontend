@@ -407,8 +407,7 @@
             <button class="tab-button active" onclick="switchView('DataAnalysis')">데이터 분석 결과</button>
             <button class="tab-button" onclick="switchView('AIInsight')">🤖 AI 해설</button>
             <div class="action-buttons">
-                <button class="action-button" onclick="handleDataAdd()">📁 데이터 추가</button>
-                <button class="action-button" onclick="openDataCleanup()">🗑️ 데이터 정리</button>
+                <button class="action-button" onclick="openDataCleanup()">📁 데이터 추가</button>
                 <button class="action-button primary" onclick="handleAnalyze()">▶️ 분석 시작</button>
             </div>
         </div>
@@ -621,7 +620,12 @@
 
             <div id="sensorFilesContainer">불러오는 중...</div>
 
-            <button onclick="closeDataCleanup()" style="margin-top: 20px; width: 100%; padding: 10px;
+            <button onclick="handleDataAdd()" style="margin-top: 20px; width: 100%; padding: 10px;
+                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; font-weight: 600;">
+                데이터 추가
+            </button>
+
+            <button onclick="closeDataCleanup()" style="margin-top: 10px; width: 100%; padding: 10px;
                    background:#667eea; color:white; border:none; border-radius:8px;">
                 닫기
             </button>
