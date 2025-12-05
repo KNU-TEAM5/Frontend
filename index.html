@@ -1008,6 +1008,18 @@
             }
         }
 
+        // 페이지 로드 시 자동으로 분석 결과 불러오기
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 백엔드에 이미 분석 결과가 있으면 자동으로 표시
+                await fetchResultsAndRender();
+                console.log('기존 분석 결과를 불러왔습니다.');
+            } catch (err) {
+                // 결과가 없거나 에러가 발생하면 조용히 무시
+                // 사용자가 데이터를 추가하고 분석을 시작할 때까지 기본 상태 유지
+                console.log('이전 분석 결과가 없습니다. 데이터를 추가하고 분석을 시작하세요.');
+            }
+        });
 
     </script>
 
